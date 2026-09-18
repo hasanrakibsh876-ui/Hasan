@@ -1,0 +1,776 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <meta name="description" content="Personal portfolio of Rakib Hasan">
+  <title>Rakib Hasan | Portfolio</title>
+
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      scroll-behavior: smooth;
+    }
+
+    body {
+      font-family: Arial, Helvetica, sans-serif;
+      background: #07111f;
+      color: white;
+      line-height: 1.7;
+    }
+
+    a {
+      text-decoration: none;
+      color: inherit;
+    }
+
+    /* NAVBAR */
+    nav {
+      position: sticky;
+      top: 0;
+      z-index: 1000;
+      background: rgba(7, 17, 31, 0.95);
+      border-bottom: 1px solid #263449;
+    }
+
+    .nav-container {
+      max-width: 1100px;
+      margin: auto;
+      padding: 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .logo {
+      font-size: 25px;
+      font-weight: bold;
+      color: #5ddcff;
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 25px;
+      list-style: none;
+    }
+
+    .nav-links a {
+      color: #b8c3d4;
+      transition: 0.3s;
+    }
+
+    .nav-links a:hover {
+      color: #5ddcff;
+    }
+
+    /* GENERAL */
+    .container {
+      width: 90%;
+      max-width: 1100px;
+      margin: auto;
+    }
+
+    section {
+      padding: 90px 0;
+    }
+
+    .section-label {
+      color: #5ddcff;
+      font-size: 14px;
+      font-weight: bold;
+      letter-spacing: 3px;
+      margin-bottom: 12px;
+      text-transform: uppercase;
+    }
+
+    .section-title {
+      font-size: 42px;
+      margin-bottom: 15px;
+    }
+
+    .section-description {
+      color: #aeb9ca;
+      max-width: 750px;
+      margin-bottom: 40px;
+    }
+
+    /* HERO */
+    .hero {
+      min-height: calc(100vh - 70px);
+      display: flex;
+      align-items: center;
+    }
+
+    .hero-content {
+      display: grid;
+      grid-template-columns: 1.2fr 0.8fr;
+      gap: 70px;
+      align-items: center;
+    }
+
+    .hero h1 {
+      font-size: 70px;
+      line-height: 1;
+      margin-bottom: 25px;
+    }
+
+    .hero h1 span {
+      color: #5ddcff;
+    }
+
+    .hero-description {
+      font-size: 18px;
+      color: #aeb9ca;
+      max-width: 650px;
+      margin-bottom: 30px;
+    }
+
+    .buttons {
+      display: flex;
+      gap: 15px;
+      flex-wrap: wrap;
+    }
+
+    .button {
+      display: inline-block;
+      padding: 13px 22px;
+      border-radius: 10px;
+      font-weight: bold;
+      border: 1px solid #34445c;
+      transition: 0.3s;
+    }
+
+    .button-primary {
+      background: #5ddcff;
+      color: #07111f;
+      border: none;
+    }
+
+    .button:hover {
+      transform: translateY(-3px);
+    }
+
+    /* PROFILE PHOTO */
+    .photo-container {
+      display: flex;
+      justify-content: center;
+    }
+
+    .photo-box {
+      width: 360px;
+      padding: 12px;
+      background: linear-gradient(135deg, #5ddcff, #8c7cff);
+      border-radius: 25px;
+      transform: rotate(2deg);
+    }
+
+    .photo-box img {
+      width: 100%;
+      display: block;
+      border-radius: 18px;
+      background: white;
+    }
+
+    /* CARDS */
+    .cards {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 20px;
+    }
+
+    .card {
+      background: #101c2e;
+      border: 1px solid #263449;
+      padding: 30px;
+      border-radius: 18px;
+    }
+
+    .card h3 {
+      font-size: 22px;
+      margin-bottom: 8px;
+    }
+
+    .card p {
+      color: #aeb9ca;
+    }
+
+    /* EDUCATION */
+    .education {
+      border-left: 3px solid #5ddcff;
+      padding-left: 30px;
+    }
+
+    .education-item {
+      margin-bottom: 35px;
+      position: relative;
+    }
+
+    .education-item::before {
+      content: "";
+      width: 13px;
+      height: 13px;
+      background: #5ddcff;
+      border-radius: 50%;
+      position: absolute;
+      left: -38px;
+      top: 10px;
+    }
+
+    .education-year {
+      color: #5ddcff;
+      font-weight: bold;
+    }
+
+    .education-item h3 {
+      font-size: 23px;
+    }
+
+    .education-item p {
+      color: #aeb9ca;
+    }
+
+    /* INTERESTS */
+    .interests {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 15px;
+    }
+
+    .interest {
+      background: #101c2e;
+      border: 1px solid #263449;
+      padding: 14px 20px;
+      border-radius: 50px;
+      font-size: 16px;
+    }
+
+    /* GOAL */
+    .goal-box {
+      background: linear-gradient(
+        135deg,
+        rgba(93, 220, 255, 0.12),
+        rgba(140, 124, 255, 0.12)
+      );
+      border: 1px solid #30405a;
+      padding: 50px;
+      border-radius: 25px;
+    }
+
+    .goal-box h3 {
+      font-size: 38px;
+      margin-bottom: 15px;
+    }
+
+    .goal-box p {
+      color: #aeb9ca;
+      max-width: 750px;
+    }
+
+    /* CONTACT */
+    .contact-list {
+      display: grid;
+      gap: 15px;
+      max-width: 700px;
+    }
+
+    .contact-item {
+      background: #101c2e;
+      border: 1px solid #263449;
+      padding: 20px;
+      border-radius: 14px;
+    }
+
+    .contact-item strong {
+      display: block;
+      margin-bottom: 5px;
+    }
+
+    .contact-item a {
+      color: #5ddcff;
+      word-break: break-word;
+    }
+
+    /* FOOTER */
+    footer {
+      text-align: center;
+      padding: 35px 20px;
+      border-top: 1px solid #263449;
+      color: #8996a9;
+    }
+
+    /* MOBILE */
+    @media (max-width: 800px) {
+
+      .nav-links {
+        display: none;
+      }
+
+      .hero-content {
+        grid-template-columns: 1fr;
+        text-align: center;
+      }
+
+      .photo-container {
+        order: -1;
+      }
+
+      .photo-box {
+        width: 280px;
+      }
+
+      .hero h1 {
+        font-size: 50px;
+      }
+
+      .hero-description {
+        margin-left: auto;
+        margin-right: auto;
+      }
+
+      .buttons {
+        justify-content: center;
+      }
+
+      .cards {
+        grid-template-columns: 1fr;
+      }
+
+      .section-title {
+        font-size: 35px;
+      }
+
+      .goal-box {
+        padding: 30px;
+      }
+
+      .goal-box h3 {
+        font-size: 30px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- NAVIGATION -->
+  <nav>
+    <div class="nav-container">
+
+      <a href="#home" class="logo">
+        Rakib.
+      </a>
+
+      <ul class="nav-links">
+        <li><a href="#about">About</a></li>
+        <li><a href="#education">Education</a></li>
+        <li><a href="#interests">Interests</a></li>
+        <li><a href="#goal">Goal</a></li>
+        <li><a href="#contact">Contact</a></li>
+      </ul>
+
+    </div>
+  </nav>
+
+
+  <!-- HOME -->
+  <section id="home" class="hero">
+
+    <div class="container hero-content">
+
+      <div>
+
+        <div class="section-label">
+          Business Management Student
+        </div>
+
+        <h1>
+          Hi, I'm <span>Rakib Hasan.</span>
+        </h1>
+
+        <p class="hero-description">
+          I am a Bangladeshi student currently studying Business Management
+          at Dong-A University in South Korea. I am passionate about
+          business, sports, learning new skills, and building my future
+          as an entrepreneur.
+        </p>
+
+        <div class="buttons">
+
+          <a href="#contact" class="button button-primary">
+            Contact Me
+          </a>
+
+          <a href="#education" class="button">
+            My Education
+          </a>
+
+        </div>
+
+      </div>
+
+
+      <!-- YOUR PHOTO -->
+      <div class="photo-container">
+
+        <div class="photo-box">
+
+          <img
+            src="profile.png"
+            alt="Rakib Hasan"
+          >
+
+        </div>
+
+      </div>
+
+    </div>
+
+  </section>
+
+
+  <!-- ABOUT -->
+  <section id="about">
+
+    <div class="container">
+
+      <div class="section-label">
+        01 — About Me
+      </div>
+
+      <h2 class="section-title">
+        About Me
+      </h2>
+
+      <p class="section-description">
+        I am a student from Bangladesh with an interest in business,
+        entrepreneurship, personal development, and learning. I am
+        currently continuing my higher education in South Korea and
+        working toward building a successful career in the future.
+      </p>
+
+
+      <div class="cards">
+
+        <div class="card">
+          <h3>🇧🇩 Nationality</h3>
+          <p>Bangladeshi</p>
+        </div>
+
+        <div class="card">
+          <h3>🎓 Current Study</h3>
+          <p>
+            Business Management at Dong-A University,
+            South Korea.
+          </p>
+        </div>
+
+        <div class="card">
+          <h3>📍 District</h3>
+          <p>Dhaka, Bangladesh</p>
+        </div>
+
+        <div class="card">
+          <h3>🏡 Home Area</h3>
+          <p>Dohar, Dhaka, Bangladesh</p>
+        </div>
+
+      </div>
+
+    </div>
+
+  </section>
+
+
+  <!-- EDUCATION -->
+  <section id="education">
+
+    <div class="container">
+
+      <div class="section-label">
+        02 — Education
+      </div>
+
+      <h2 class="section-title">
+        My Education Background
+      </h2>
+
+      <p class="section-description">
+        My academic journey from Bangladesh to higher education
+        in South Korea.
+      </p>
+
+
+      <div class="education">
+
+        <div class="education-item">
+
+          <div class="education-year">
+            2026 — Present
+          </div>
+
+          <h3>
+            Dong-A University, South Korea
+          </h3>
+
+          <p>
+            Business Management
+          </p>
+
+        </div>
+
+
+        <div class="education-item">
+
+          <div class="education-year">
+            2022
+          </div>
+
+          <h3>
+            Higher Secondary Certificate (HSC)
+          </h3>
+
+          <p>
+            GPA: 4.50
+          </p>
+
+        </div>
+
+
+        <div class="education-item">
+
+          <div class="education-year">
+            Earlier Education
+          </div>
+
+          <h3>
+            Secondary School Certificate (SSC)
+          </h3>
+
+          <p>
+            GPA: 3.06
+          </p>
+
+        </div>
+
+      </div>
+
+    </div>
+
+  </section>
+
+
+  <!-- INTERESTS -->
+  <section id="interests">
+
+    <div class="container">
+
+      <div class="section-label">
+        03 — Interests
+      </div>
+
+      <h2 class="section-title">
+        My Interests
+      </h2>
+
+      <p class="section-description">
+        These are some of the activities and subjects I enjoy
+        in my free time.
+      </p>
+
+
+      <div class="interests">
+
+        <div class="interest">
+          ⚽ Playing Football
+        </div>
+
+        <div class="interest">
+          🏏 Playing Cricket
+        </div>
+
+        <div class="interest">
+          🎬 Watching Movies
+        </div>
+
+        <div class="interest">
+          💼 Business
+        </div>
+
+        <div class="interest">
+          🚀 Entrepreneurship
+        </div>
+
+        <div class="interest">
+          📚 Learning New Skills
+        </div>
+
+      </div>
+
+    </div>
+
+  </section>
+
+
+  <!-- DHAKA / DOHAR -->
+  <section id="location">
+
+    <div class="container">
+
+      <div class="section-label">
+        04 — My Home
+      </div>
+
+      <h2 class="section-title">
+        Dhaka & Dohar
+      </h2>
+
+      <div class="cards">
+
+        <div class="card">
+
+          <h3>🏙️ Dhaka</h3>
+
+          <p>
+            Dhaka is the capital and largest city of Bangladesh.
+            It is an important center for education, business,
+            culture, government, and economic activity.
+          </p>
+
+        </div>
+
+
+        <div class="card">
+
+          <h3>🌿 Dohar</h3>
+
+          <p>
+            Dohar is an upazila of Dhaka District in Bangladesh.
+            It is located in the southern part of Dhaka District
+            and is known for its riverside environment and
+            connection with the wider Dhaka region.
+          </p>
+
+        </div>
+
+      </div>
+
+    </div>
+
+  </section>
+
+
+  <!-- FUTURE GOAL -->
+  <section id="goal">
+
+    <div class="container">
+
+      <div class="goal-box">
+
+        <div class="section-label">
+          05 — Future Goal
+        </div>
+
+        <h3>
+          🚀 My Future Goal
+        </h3>
+
+        <p>
+          My future goal is to become an Entrepreneur. I want to
+          develop strong business knowledge, gain practical
+          experience, identify opportunities, and eventually
+          build and grow my own successful business.
+        </p>
+
+      </div>
+
+    </div>
+
+  </section>
+
+
+  <!-- CONTACT -->
+  <section id="contact">
+
+    <div class="container">
+
+      <div class="section-label">
+        06 — Contact
+      </div>
+
+      <h2 class="section-title">
+        Let's Connect
+      </h2>
+
+      <p class="section-description">
+        You can contact me through email or connect with me
+        on Facebook.
+      </p>
+
+
+      <div class="contact-list">
+
+        <!-- EMAIL -->
+        <div class="contact-item">
+
+          <strong>📧 Gmail</strong>
+
+          <a href="mailto:hasanrakibsh876@gmail.com">
+            hasanrakibsh876@gmail.com
+          </a>
+
+        </div>
+
+
+        <!-- FACEBOOK -->
+        <div class="contact-item">
+
+          <strong>📘 Facebook</strong>
+
+          <a
+            href="https://www.facebook.com/share/1W4hG81Bfr/"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            Visit My Facebook
+          </a>
+
+        </div>
+
+
+        <!-- NATIONALITY -->
+        <div class="contact-item">
+
+          <strong>🇧🇩 Nationality</strong>
+
+          <span>
+            Bangladeshi
+          </span>
+
+        </div>
+
+      </div>
+
+    </div>
+
+  </section>
+
+
+  <!-- FOOTER -->
+  <footer>
+
+    <p>
+      © 2026 Rakib Hasan. All Rights Reserved.
+    </p>
+
+    <p>
+      Business Management Student | Future Entrepreneur
+    </p>
+
+  </footer>
+
+
+</body>
+</html>
