@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>CSV Data Quality Workbench</title>
+<style>
+:root{--bg:#f6f7f9;--fg:#1c2128;--card:#fff;--bd:#d6dae0;--ac:#2f6fed;--mu:#667085;--bad:#fdecea;--ok:#e7f6ec}
+@media(prefers-color-scheme:dark){:root{--bg:#14171c;--fg:#e6e9ee;--card:#1d2128;--bd:#363c46;--ac:#6d9cff;--mu:#9aa3b2;--bad:#4a2523;--ok:#1f3a2a}}
+*{box-sizing:border-box}body{margin:0;font:14px/1.45 system-ui,sans-serif;background:var(--bg);color:var(--fg)}
+header{padding:14px 20px;border-bottom:1px solid var(--bd);background:var(--card)}h1{margin:0 0 6px;font-size:18px}
+nav{display:flex;gap:4px;flex-wrap:wrap;padding:10px 20px 0}nav button{border:1px solid var(--bd);border-bottom:0;background:var(--card);color:var(--fg);padding:7px 12px;border-radius:6px 6px 0 0;cursor:pointer}
+nav button.on{background:var(--ac);color:#fff;border-color:var(--ac)}
+main{padding:0 20px 40px}section{display:none;background:var(--card);border:1px solid var(--bd);padding:16px;border-radius:0 6px 6px 6px}section.on{display:block}
+h2{margin:0 0 10px;font-size:16px}h3{margin:16px 0 6px;font-size:14px}
+button,select,input{font:inherit;color:var(--fg);background:var(--card);border:1px solid var(--bd);border-radius:5px;padding:5px 8px}
+button{cursor:pointer}button.p{background:var(--ac);color:#fff;border-color:var(--ac)}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:8px 0}.mu{color:var(--mu)}
+.tw{overflow:auto;max-height:520px;border:1px solid var(--bd)}table{border-collapse:collapse;width:100%}
+th,td{border-bottom:1px solid var(--bd);padding:4px 8px;text-align:left;vertical-align:top}th{position:sticky;top:0;background:var(--card);cursor:pointer;white-space:nowrap}
+td.w{min-width:260px;max-width:420px;white-space:normal}tr.bad td{background:var(--bad)}td.n{text-align:right;font-variant-numeric:tabular-nums}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px}.card{border:1px solid var(--bd);border-radius:6px;padding:8px}.card b{display:block;font-size:17px}
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:12px}svg{width:100%;height:auto;background:var(--card);border:1px solid var(--bd);border-radius:6px}svg text{fill:var(--fg);font-size:11px}
+.tag{padding:1px 6px;border-radius:9px;background:var(--bg);border:1px solid var(--bd);font-size:12px}.ok{background:var(--ok);padding:8px;border-radius:6px}
+label{display:inline-flex;gap:5px;align-items:center}fieldset{border:1px solid var(--bd);border-radius:6px;margin:8px 0}
+</style></head><body>
+<header><h1>CSV Data Quality Workbench</h1>
+<div class="row"><input type="file" id="file" accept=".csv,text/csv" multiple><select id="dsSel" style="display:none"></select><span class="mu">All processing happens in your browser. Your original upload is never modified.</span></div></header>
+<nav id="nav"></nav>
+<main>
+<section id="t1"><h2>T1 · Upload, records, row counts and suggested types</h2><div id="t1c" class="mu">Upload a CSV file to begin.</div></section>
+<section id="t2"><h2>T2 · Search, sort and filter</h2>
+<div class="row"><input id="q" placeholder="Search text…" size="26"><select id="qc"></select>
+<select id="fc"></select><select id="fv"></select><label><input type="checkbox" id="onlyBad"> issues only</label><button id="clr">Clear</button></div>
+<div class="row"><span id="t2info" class="mu"></span><button id="pg-"> ‹ </button><span id="pgi"></span><button id="pg+"> › </button><span class="mu">Click a header to sort. Full Description and Notes are shown; shaded rows have detected issues.</span></div>
+<div class="tw"><table id="tbl"></table></div></section>
+<section id="t3"><h2>T3 · Duplicates, missing/invalid values, conflicting IDs</h2>
+<div id="t3sum"></div>
+<fieldset><legend>Required columns (blank = missing)</legend><div id="reqs" class="row"></div></fieldset>
+<fieldset><legend>Automatic correction rules</legend><div class="row">
+<label><input type="checkbox" id="r_trim" checked> Trim spaces</label>
+<label><input type="checkbox" id="r_dup" checked> Remove exact duplicate rows (keep first)</label>
+<label>Conflicting IDs <select id="r_conf"><option value="leave">leave for manual fix</option><option value="first">keep first row</option><option value="last">keep last row</option></select></label></div>
+<div class="row"><label>Missing numbers <select id="r_miss"><option value="leave">leave</option><option value="drop">drop row</option><option value="median">fill with median</option><option value="zero">fill with 0</option></select></label>
+<label>Invalid numbers (negative amounts, non-numeric) <select id="r_inv"><option value="leave">leave</option><option value="blank">set blank</option><option value="drop">drop row</option><option value="median">fill with median</option></select></label>
+<label>Missing text <select id="r_txt"><option value="leave">leave</option><option value="unknown">fill “Unknown”</option><option value="drop">drop row</option></select></label>
+<label>Amount &gt; RequestedAmount <select id="r_cap"><option value="leave">leave</option><option value="cap">cap at requested</option><option value="blank">set blank</option></select></label></div>
+<div class="row"><button class="p" id="prevBtn">Preview rule changes</button><button id="resetBtn">Reset all edits to original</button></div></fieldset>
+<fieldset><legend>Manual edit</legend><div class="row"><input type="number" id="m_row" placeholder="Row # (file line)" style="width:150px"><select id="m_col"></select><input id="m_val" placeholder="New value" size="22"><input id="m_why" placeholder="Reason" size="22"><button id="m_prev">Preview edit</button><button id="m_del">Preview delete row</button></div></fieldset>
+<div id="pend"></div><h3>Detected issues</h3><div class="row"><select id="iType"></select><span id="iInfo" class="mu"></span></div><div class="tw"><table id="iss"></table></div></section>
+<section id="t4"><h2>T4 · Descriptive statistics</h2><div class="row"><label>Column <select id="s_col"></select></label><label><input type="checkbox" id="s_filt"> use only rows matching the T2 search/filter</label></div><div id="t4c"></div></section>
+<section id="t5"><h2>T5 · Charts and 1.5×IQR outliers</h2><div id="t5c"></div></section>
+<section id="t6"><h2>T6 · Export</h2><div id="t6c"></div></section>
+</main>
+<script>
+const $=i=>document.getElementById(i),esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const fmt=x=>x==null||!isFinite(x)?'–':x.toLocaleString(undefined,{maximumFractionDigits:4});
+const DS={};let ds=null,pend=null,sortC=null,sortD=1,page=0;const PS=100;
+const TABS=['T1 Upload','T2 Explore','T3 Clean','T4 Statistics','T5 Charts','T6 Export'];
+$('nav').innerHTML=TABS.map((t,i)=>`<button data-t="${i+1}">${t}</button>`).join('');
+function show(n){document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('on',b.dataset.t==n));document.querySelectorAll('section').forEach(s=>s.classList.toggle('on',s.id=='t'+n))}
+$('nav').onclick=e=>{if(e.target.dataset.t)show(e.target.dataset.t)};show(1);
+/* ---------- parsing ---------- */
+function parseCSV(t){t=t.replace(/^\uFEFF/,'');const rows=[];let r=[],f='',q=false;
+for(let i=0;i<t.length;i++){const c=t[i];if(q){if(c=='"'){if(t[i+1]=='"'){f+='"';i++}else q=false}else f+=c}
+else if(c=='"')q=true;else if(c==','){r.push(f);f=''}
+else if(c=='\n'||c=='\r'){if(c=='\r'&&t[i+1]=='\n')i++;r.push(f);rows.push(r);r=[];f=''}else f+=c}
+if(f!==''||r.length){r.push(f);rows.push(r)}return rows.filter(r=>r.some(x=>x!==''))}
+function toCSV(cols,rows){const q=v=>/[",\r\n]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v;return[cols.map(q).join(',')].concat(rows.map(r=>r.map(q).join(','))).join('\r\n')+'\r\n'}
+function infer(cols,rows){return cols.map(c=>{const v=rows.map(r=>r.d[c].trim()),ne=v.filter(x=>x!==''),n=ne.length,isN=x=>isFinite(+x),nn=ne.filter(isN),
+dt=ne.filter(x=>/^\d{4}-\d\d-\d\d$/.test(x)&&!isNaN(Date.parse(x))).length,dist=new Set(ne).size;let t='Text';
+if(n&&nn.length/n>=.8)t=nn.every(x=>/^-?\d+$/.test(x))?'Integer':'Decimal (number)';
+else if(n&&dt/n>=.8)t='Date (ISO yyyy-mm-dd)';
+else if(n&&dist/n>=.9&&ne.every(x=>/^[A-Za-z]+-\d+$/.test(x)))t='Identifier';
+else if(dist<=Math.max(12,n*.03))t='Category';
+return{c,t,miss:v.length-n,dist,ex:ne.slice(0,3)}})}
+const isNum=t=>/^(Integer|Decimal)/.test(t);
+$('file').onchange=async e=>{for(const f of e.target.files){const raw=await f.text(),p=parseCSV(raw);if(p.length<2)continue;
+const cols=p[0].map(h=>h.trim()),orig=p.slice(1).map((r,i)=>({n:i+2,d:Object.fromEntries(cols.map((c,j)=>[c,r[j]??'']))}));
+const types=infer(cols,orig);DS[f.name]={name:f.name,raw,cols,orig,work:orig.map(r=>({n:r.n,d:{...r.d}})),log:[],types,
+req:new Set(types.filter(t=>t.miss/orig.length<=.2).map(t=>t.c)),ragged:p.slice(1).filter(r=>r.length!=cols.length).length};ds=DS[f.name]}
+if(!ds){e.target.value='';return}
+$('dsSel').innerHTML=Object.keys(DS).map(k=>`<option>${esc(k)}</option>`).join('');$('dsSel').value=ds?.name;$('dsSel').style.display=Object.keys(DS).length>1?'':'none';pend=null;initUI();renderAll();e.target.value=''};
+$('dsSel').onchange=e=>{ds=DS[e.target.value];pend=null;initUI();renderAll()};
+const idCol=()=>ds.cols.find(c=>/^(transaction)?_?id$/i.test(c))||ds.cols[0],isAmt=c=>/amount/i.test(c);
+const num=v=>v.trim()!==''&&isFinite(+v)?+v:NaN;
+function initUI(){const o=a=>a.map(c=>`<option>${esc(c)}</option>`).join('');
+$('qc').innerHTML='<option value="*">All columns</option>'+o(ds.cols);$('fc').innerHTML='<option value="">Filter column…</option>'+o(ds.cols);$('fv').innerHTML='<option value="">value</option>';
+$('m_col').innerHTML=o(ds.cols);const nc=ds.types.filter(t=>isNum(t.t)).map(t=>t.c);$('s_col').innerHTML=o(nc);
+const a=nc.find(c=>/^amount$/i.test(c))||nc.find(isAmt);if(a)$('s_col').value=a;
+$('reqs').innerHTML=ds.cols.map(c=>`<label><input type="checkbox" data-c="${esc(c)}" ${ds.req.has(c)?'checked':''}>${esc(c)}</label>`).join('');page=0;sortC=null}
+$('reqs').onchange=e=>{e.target.checked?ds.req.add(e.target.dataset.c):ds.req.delete(e.target.dataset.c);renderT3()};
+/* ---------- T1 ---------- */
+function renderT1(){if(!ds)return;const r=ds.orig;$('t1c').innerHTML=`<div class="cards"><div class="card">File<b>${esc(ds.name)}</b></div><div class="card">Data rows<b>${r.length.toLocaleString()}</b></div><div class="card">Columns<b>${ds.cols.length}</b></div><div class="card">Rows with wrong field count<b>${ds.ragged}</b></div></div>
+<h3>Suggested data types</h3><div class="tw"><table><tr><th>Column</th><th>Suggested type</th><th>Blank</th><th>Distinct</th><th>Examples</th></tr>${ds.types.map(t=>`<tr><td>${esc(t.c)}</td><td><span class="tag">${t.t}</span></td><td>${t.miss}</td><td>${t.dist}</td><td>${t.ex.map(esc).join(' · ').slice(0,90)}</td></tr>`).join('')}</table></div>
+<h3>Records (first 10 of ${r.length.toLocaleString()}; use T2 to see all)</h3><div class="tw"><table><tr><th>#</th>${ds.cols.map(c=>`<th>${esc(c)}</th>`).join('')}</tr>${r.slice(0,10).map(x=>`<tr><td>${x.n}</td>${ds.cols.map(c=>`<td class="${/desc|note/i.test(c)?'w':''}">${esc(x.d[c])}</td>`).join('')}</tr>`).join('')}</table></div>`}
+/* ---------- T2 ---------- */
+function filtered(){const q=$('q').value.toLowerCase(),qc=$('qc').value,fc=$('fc').value,fv=$('fv').value;let r=ds.work.filter(x=>{
+if(q&&!(qc=='*'?ds.cols.some(c=>x.d[c].toLowerCase().includes(q)):x.d[qc].toLowerCase().includes(q)))return false;
+if(fc&&fv!==''&&x.d[fc]!==fv)return false;return true});
+if($('onlyBad').checked){const s=new Set(detect().map(i=>i.n));r=r.filter(x=>s.has(x.n))}
+if(sortC){const nu=sortC!='#'&&isNum(ds.types.find(t=>t.c==sortC).t);r=[...r].sort((a,b)=>{const A=sortC=='#'?a.n:a.d[sortC],B=sortC=='#'?b.n:b.d[sortC];
+if(sortC=='#')return(A-B)*sortD;if(nu){const x=num(A),y=num(B);if(isNaN(x)||isNaN(y))return isNaN(x)-isNaN(y);return(x-y)*sortD}return A.localeCompare(B)*sortD})}return r}
+$('fc').onchange=()=>{const c=$('fc').value,v=c?[...new Set(ds.work.map(r=>r.d[c]))].sort():[];$('fv').innerHTML='<option value="">value</option>'+(v.length<=200?v.map(x=>`<option value="${esc(x)}">${esc(x)||'(blank)'}</option>`).join(''):'');page=0;renderT2()};
+['q','qc','fv','onlyBad'].forEach(i=>$(i).oninput=()=>{page=0;renderT2();renderT4();renderT5()});$('fv').onchange=()=>{page=0;renderT2();renderT4();renderT5()};
+$('clr').onclick=()=>{$('q').value='';$('fc').value='';$('fv').innerHTML='<option value="">value</option>';$('onlyBad').checked=false;sortC=null;page=0;renderAll()};
+$('pg-').onclick=()=>{page=Math.max(0,page-1);renderT2()};$('pg+').onclick=()=>{page++;renderT2()};
+$('tbl').onclick=e=>{const h=e.target.closest('th');if(!h)return;const c=h.dataset.c;sortD=sortC==c?-sortD:1;sortC=c;renderT2()};
+function renderT2(){if(!ds)return;const r=filtered(),bad=new Set(detect().map(i=>i.n)),mp=Math.max(0,Math.ceil(r.length/PS)-1);page=Math.min(page,mp);
+$('t2info').textContent=`${r.length.toLocaleString()} of ${ds.work.length.toLocaleString()} rows`;$('pgi').textContent=`page ${page+1}/${mp+1}`;
+const ar=c=>sortC==c?(sortD>0?' ▲':' ▼'):'';
+$('tbl').innerHTML=`<tr><th data-c="#">#${ar('#')}</th>${ds.cols.map(c=>`<th data-c="${esc(c)}">${esc(c)}${ar(c)}</th>`).join('')}</tr>`+r.slice(page*PS,page*PS+PS).map(x=>`<tr class="${bad.has(x.n)?'bad':''}"><td>${x.n}</td>${ds.cols.map(c=>`<td class="${/desc|note/i.test(c)?'w':isNum(ds.types.find(t=>t.c==c).t)?'n':''}">${esc(x.d[c])}</td>`).join('')}</tr>`).join('')}
+/* ---------- T3 ---------- */
+function detect(rows=ds.work){const I=[],idc=idCol(),T=Object.fromEntries(ds.types.map(t=>[t.c,t.t])),seen=new Map(),byId=new Map(),st=ds.cols.includes('ApprovalStatus');
+rows.forEach(r=>{const key=ds.cols.map(c=>r.d[c].trim()).join('\u0001'),id=r.d[idc].trim(),add=(col,type,msg)=>I.push({n:r.n,id,col,type,msg});
+if(seen.has(key))add('(entire row)','Duplicate','Exact duplicate of row '+seen.get(key));else seen.set(key,r.n);
+if(!byId.has(id))byId.set(id,[]);byId.get(id).push({n:r.n,key});
+ds.cols.forEach(c=>{const v=r.d[c].trim();if(v===''){if(ds.req.has(c))add(c,'Missing','Blank value'+(st&&isNum(T[c])?' (status: '+r.d.ApprovalStatus+')':''));return}
+if(isNum(T[c])){if(!isFinite(+v))add(c,'Invalid','Not a number');else if(isAmt(c)&&+v<0)add(c,'Invalid','Negative amount')}
+else if(/^Date/.test(T[c])&&!(/^\d{4}-\d\d-\d\d$/.test(v)&&!isNaN(Date.parse(v))))add(c,'Invalid','Not a valid date')});
+if(ds.cols.includes('Amount')&&ds.cols.includes('RequestedAmount')){const a=num(r.d.Amount),q=num(r.d.RequestedAmount);if(a>q)add('Amount','Invalid','Amount exceeds RequestedAmount ('+q+')')}});
+byId.forEach((a,id)=>{const ks=new Set(a.map(x=>x.key));if(ks.size>1)a.forEach(x=>I.push({n:x.n,id,col:idc,type:'Conflicting ID',msg:`Same ID, ${ks.size} different records (rows ${a.map(y=>y.n).join(', ')})`}))});return I}
+function mkPend(rows,ch,title){pend={rows,ch,title};renderT3()}
+function plan(){const R={trim:$('r_trim').checked,dup:$('r_dup').checked,conf:$('r_conf').value,miss:$('r_miss').value,inv:$('r_inv').value,txt:$('r_txt').value,cap:$('r_cap').value},
+idc=idCol();let w=ds.work.map(r=>({n:r.n,d:{...r.d}})),ch=[];
+const add=(r,col,o,nv,m,why)=>ch.push({n:r.n,id:r.d[idc],col,o,nv,m,why}),
+drop=(rs,m,why)=>{const s=new Set(rs);rs.forEach(r=>add(r,'(entire row)','(row kept)','(row removed)',m,why));w=w.filter(r=>!s.has(r))},
+setv=(r,c,v,m,why)=>{add(r,c,r.d[c],v,m,why);r.d[c]=v},key=r=>ds.cols.map(c=>r.d[c].trim()).join('\u0001');
+if(R.trim)w.forEach(r=>ds.cols.forEach(c=>{const t=r.d[c].trim();if(t!==r.d[c])setv(r,c,t,'Trim spaces','Leading/trailing whitespace')}));
+if(R.dup){const s=new Set(),d=[];w.forEach(r=>{const k=key(r);s.has(k)?d.push(r):s.add(k)});drop(d,'Remove duplicate','Exact duplicate of an earlier row')}
+if(R.conf!='leave'){const g=new Map();w.forEach(r=>{const i=r.d[idc].trim();(g.get(i)||g.set(i,[]).get(i)).push(r)});const d=[];
+g.forEach(a=>{if(new Set(a.map(key)).size>1){const k=R.conf=='first'?a[0]:a[a.length-1];a.forEach(r=>r!==k&&d.push(r))}});drop(d,'Resolve conflicting ID (keep '+R.conf+')','Same ID used by different records')}
+const nc=ds.types.filter(t=>isNum(t.t)).map(t=>t.c),med=Object.fromEntries(nc.map(c=>[c,quant(w.map(r=>num(r.d[c])).filter(x=>!isNaN(x)&&!(isAmt(c)&&x<0)).sort((a,b)=>a-b),.5)])),dr=new Set();
+w.forEach(r=>{nc.forEach(c=>{const v=r.d[c].trim(),miss=v===''&&ds.req.has(c),inv=v!==''&&(!isFinite(+v)||(isAmt(c)&&+v<0));
+if(miss){if(R.miss=='drop')dr.add(r);else if(R.miss=='median')setv(r,c,String(med[c]),'Fill missing with median','Blank numeric value');else if(R.miss=='zero')setv(r,c,'0','Fill missing with 0','Blank numeric value')}
+if(inv){if(R.inv=='drop')dr.add(r);else if(R.inv=='blank')setv(r,c,'','Set invalid to blank','Invalid numeric value');else if(R.inv=='median')setv(r,c,String(med[c]),'Fill invalid with median','Invalid numeric value')}});
+if(R.txt!='leave')ds.cols.filter(c=>!nc.includes(c)&&ds.req.has(c)).forEach(c=>{if(r.d[c].trim()==='')R.txt=='drop'?dr.add(r):setv(r,c,'Unknown','Fill missing text','Blank required text')})});
+if(dr.size)drop([...dr],'Drop row','Missing/invalid value rule');
+if(R.cap!='leave')w.forEach(r=>{const a=num(r.d.Amount||''),q=num(r.d.RequestedAmount||'');if(a>q)R.cap=='cap'?setv(r,'Amount',r.d.RequestedAmount,'Cap at requested amount','Amount exceeded RequestedAmount'):setv(r,'Amount','','Set invalid to blank','Amount exceeded RequestedAmount')});
+return{rows:w,ch}}
+$('prevBtn').onclick=()=>{const p=plan();mkPend(p.rows,p.ch,'Automatic rules')};
+$('m_prev').onclick=()=>{const n=+$('m_row').value,c=$('m_col').value,v=$('m_val').value,w=ds.work.map(r=>({n:r.n,d:{...r.d}})),r=w.find(x=>x.n===n);if(!r)return alert('Row # not found (use the # column).');
+if(r.d[c]===v)return alert('New value equals the current value.');pend={rows:w,ch:[{n,id:r.d[idCol()],col:c,o:r.d[c],nv:v,m:'Manual edit',why:$('m_why').value||'Manual correction'}],title:'Manual edit'};r.d[c]=v;renderT3()};
+$('m_del').onclick=()=>{const n=+$('m_row').value,r=ds.work.find(x=>x.n===n);if(!r)return alert('Row # not found (use the # column).');
+pend={rows:ds.work.filter(x=>x.n!==n).map(x=>({n:x.n,d:{...x.d}})),ch:[{n,id:r.d[idCol()],col:'(entire row)',o:'(row kept)',nv:'(row removed)',m:'Manual delete',why:$('m_why').value||'Manual removal'}],title:'Manual delete'};renderT3()};
+$('resetBtn').onclick=()=>{if(confirm('Discard all edits and restore the original data?')){ds.work=ds.orig.map(r=>({n:r.n,d:{...r.d}}));ds.log=[];pend=null;renderAll()}};
+function applyPend(){const t=new Date().toISOString();ds.work=pend.rows;ds.log.push(...pend.ch.map(c=>({...c,t})));pend=null;renderAll()}
+function sumLine(rows){const c=$('s_col').value,v=rows.map(r=>num(r.d[c]||'')).filter(x=>!isNaN(x)),s=stats(v);return `${rows.length} rows · ${esc(c)}: count ${s.count}, total ${fmt(s.total)}, mean ${fmt(s.mean)}, median ${fmt(s.median)}`}
+function renderT3(){if(!ds)return;const I=detect(),by={};I.forEach(i=>by[i.type]=(by[i.type]||0)+1);
+$('t3sum').innerHTML=`<div class="cards">${['Duplicate','Conflicting ID','Missing','Invalid'].map(k=>`<div class="card">${k}<b>${by[k]||0}</b></div>`).join('')}<div class="card">Rows now<b>${ds.work.length}</b></div><div class="card">Edits logged<b>${ds.log.length}</b></div></div>`;
+if(pend){const m={};pend.ch.forEach(c=>m[c.m]=(m[c.m]||0)+1);$('pend').innerHTML=`<fieldset><legend>Preview: ${pend.title}</legend>${pend.ch.length?`<p>${Object.entries(m).map(([k,v])=>`<span class="tag">${esc(k)}: ${v}</span>`).join(' ')}</p><p><b>Before</b>: ${sumLine(ds.work)}<br><b>After</b>: ${sumLine(pend.rows)}</p>
+<div class="tw" style="max-height:260px"><table><tr><th>Row</th><th>ID</th><th>Field</th><th>Original</th><th>New</th><th>Method</th></tr>${pend.ch.slice(0,300).map(c=>`<tr><td>${c.n}</td><td>${esc(c.id)}</td><td>${esc(c.col)}</td><td>${esc(c.o)}</td><td>${esc(c.nv)}</td><td>${esc(c.m)}</td></tr>`).join('')}</table></div>${pend.ch.length>300?'<p class="mu">Showing first 300 changes.</p>':''}
+<div class="row"><button class="p" id="ap">Apply ${pend.ch.length} change(s)</button><button id="dc">Discard</button></div>`:'<p>No changes would be made.</p><button id="dc">Close</button>'}</fieldset>`;
+if($('ap'))$('ap').onclick=applyPend;$('dc').onclick=()=>{pend=null;renderT3()}}else $('pend').innerHTML='';
+const ty=$('iType').value;$('iType').innerHTML='<option value="">All issue types</option>'+Object.keys(by).map(k=>`<option>${k}</option>`).join('');$('iType').value=ty;
+const L=I.filter(i=>!ty||i.type==ty);$('iInfo').textContent=`${L.length} issue(s)${L.length>500?' (first 500 shown)':''}`;
+$('iss').innerHTML=`<tr><th>Row</th><th>ID</th><th>Field</th><th>Type</th><th>Detail</th><th></th></tr>`+L.slice(0,500).map(i=>`<tr><td>${i.n}</td><td>${esc(i.id)}</td><td>${esc(i.col)}</td><td><span class="tag">${i.type}</span></td><td>${esc(i.msg)}</td><td><button data-n="${i.n}" data-c="${esc(i.col)}">Edit</button></td></tr>`).join('')}
+$('iType').onchange=renderT3;$('iss').onclick=e=>{const b=e.target.closest('button');if(!b)return;$('m_row').value=b.dataset.n;if(b.dataset.c[0]!='(')$('m_col').value=b.dataset.c;$('m_val').focus()};
+/* ---------- stats ---------- */
+function quant(s,p){if(!s.length)return NaN;const h=(s.length-1)*p,l=Math.floor(h);return s[l]+(h-l)*((s[l+1]??s[l])-s[l])}
+function stats(v){const n=v.length,s=[...v].sort((a,b)=>a-b);if(!n)return{count:0};const t=v.reduce((a,b)=>a+b,0),m=t/n,f={};v.forEach(x=>{const k=+x.toFixed(10);f[k]=(f[k]||0)+1});const mc=Math.max(...Object.values(f)),
+md=mc==1?null:Object.keys(f).filter(k=>f[k]==mc).map(Number);return{count:n,total:t,mean:m,median:quant(s,.5),modes:md,modeCount:mc,min:s[0],max:s[n-1],range:s[n-1]-s[0],sd:Math.sqrt(v.reduce((a,b)=>a+(b-m)**2,0)/n)}}
+function getVals(){const c=$('s_col').value;if(!c)return{c,v:[],rows:[]};const rows=($('s_filt').checked?filtered():ds.work).filter(r=>!isNaN(num(r.d[c])));return{c,rows,v:rows.map(r=>+r.d[c])}}
+$('s_col').onchange=$('s_filt').onchange=()=>{renderT4();renderT5()};
+const modeTxt=s=>s.modes?s.modes.slice(0,6).map(fmt).join(', ')+(s.modes.length>6?'…':'')+` (×${s.modeCount})`:'none (all values unique)';
+function renderT4(){if(!ds)return;const{c,v}=getVals();if(!c){$('t4c').textContent='No numeric column detected.';return}const s=stats(v),sk=(ds.work.length-v.length);
+const K=[['Count',s.count],['Total',s.total],['Mean',s.mean],['Median',s.median],['Mode',modeTxt(s)],['Minimum',s.min],['Maximum',s.max],['Range',s.range],['Population std. dev. (σ)',s.sd]];
+$('t4c').innerHTML=`<p class="mu">${esc(c)} · ${v.length} numeric values used · ${sk} rows ignored (blank/non-numeric or filtered out). Results update after every applied cleaning step.</p><div class="cards">${K.map(([k,x])=>`<div class="card">${k}<b>${typeof x=='string'?x:fmt(x)}</b></div>`).join('')}</div>`}
+/* ---------- charts ---------- */
+function fences(v){const s=[...v].sort((a,b)=>a-b),q1=quant(s,.25),q3=quant(s,.75),i=q3-q1;return{q1,q3,iqr:i,lo:q1-1.5*i,hi:q3+1.5*i}}
+function hist(v,f){const W=640,H=250,L=44,R=10,T=10,B=28,mn=Math.min(...v),mx=Math.max(...v),k=Math.max(5,Math.ceil(Math.log2(v.length)+1)),bw=(mx-mn)/k||1,b=Array(k).fill(0);v.forEach(x=>b[Math.min(k-1,Math.floor((x-mn)/bw))]++);
+const my=Math.max(...b),X=x=>L+(x-mn)/((mx-mn)||1)*(W-L-R),Y=c=>H-B-c/my*(H-T-B);let s=`<svg viewBox="0 0 ${W} ${H}">`;
+b.forEach((c,i)=>s+=`<rect x="${X(mn+i*bw)+1}" y="${Y(c)}" width="${(W-L-R)/k-2}" height="${H-B-Y(c)}" fill="var(--ac)"><title>${fmt(mn+i*bw)} to ${fmt(mn+(i+1)*bw)}: ${c}</title></rect>`);
+[f.lo,f.hi].forEach(x=>{if(x>mn&&x<mx)s+=`<line x1="${X(x)}" x2="${X(x)}" y1="${T}" y2="${H-B}" stroke="#d92d20" stroke-dasharray="4 3"/><text x="${X(x)+3}" y="${T+10}">${fmt(x)}</text>`});
+return s+`<line x1="${L}" x2="${W-R}" y1="${H-B}" y2="${H-B}" stroke="gray"/><text x="${L}" y="${H-10}">${fmt(mn)}</text><text x="${W-R}" y="${H-10}" text-anchor="end">${fmt(mx)}</text><text x="4" y="${T+10}">${my}</text></svg>`}
+function box(series,mn,mx,f){const W=640,L=110,R=14,rh=70,H=rh*series.length+26,X=x=>L+(x-mn)/((mx-mn)||1)*(W-L-R);let s=`<svg viewBox="0 0 ${W} ${H}">`;
+series.forEach((a,i)=>{const y=i*rh+36,sv=[...a.v].sort((p,q)=>p-q),q1=quant(sv,.25),q2=quant(sv,.5),q3=quant(sv,.75),ins=sv.filter(x=>x>=f.lo&&x<=f.hi),wl=ins[0],wh=ins[ins.length-1];
+s+=`<text x="4" y="${y+4}">${a.l}</text><line x1="${X(wl)}" x2="${X(wh)}" y1="${y}" y2="${y}" stroke="gray"/><rect x="${X(q1)}" y="${y-14}" width="${Math.max(1,X(q3)-X(q1))}" height="28" fill="var(--ac)" opacity=".35" stroke="var(--ac)"/><line x1="${X(q2)}" x2="${X(q2)}" y1="${y-14}" y2="${y+14}" stroke="var(--ac)" stroke-width="2"/>`;
+sv.filter(x=>x<f.lo||x>f.hi).forEach(x=>s+=`<circle cx="${X(x)}" cy="${y}" r="3" fill="none" stroke="#d92d20"><title>${fmt(x)}</title></circle>`)});
+return s+`<text x="${L}" y="${H-4}">${fmt(mn)}</text><text x="${W-R}" y="${H-4}" text-anchor="end">${fmt(mx)}</text></svg>`}
+function bars(rows,cat,c){const g={};rows.forEach(r=>g[r.d[cat]||'(blank)']=(g[r.d[cat]||'(blank)']||0)+num(r.d[c]));const e=Object.entries(g).sort((a,b)=>b[1]-a[1]).slice(0,15),mx=Math.max(...e.map(x=>x[1]),1),W=640,H=e.length*22+8;
+return`<svg viewBox="0 0 ${W} ${H}">`+e.map(([k,x],i)=>`<text x="4" y="${i*22+18}">${esc(k.slice(0,24))}</text><rect x="170" y="${i*22+6}" width="${Math.max(1,x/mx*(W-250))}" height="16" fill="var(--ac)"/><text x="${176+x/mx*(W-250)}" y="${i*22+18}">${fmt(x)}</text>`).join('')+'</svg>'}
+let catSel='';
+function renderT5(){if(!ds)return;const{c,v,rows}=getVals();if(v.length<4){$('t5c').textContent='Not enough numeric values.';return}
+const f=fences(v),out=rows.filter(r=>+r.d[c]<f.lo||+r.d[c]>f.hi),w=v.filter(x=>x>=f.lo&&x<=f.hi),A=stats(v),B=stats(w),mn=Math.min(...v),mx=Math.max(...v),
+cats=ds.types.filter(t=>t.t=='Category').map(t=>t.c);if(!catSel||!cats.includes(catSel))catSel=cats[0]||'';
+const R=[['Count','count'],['Total','total'],['Mean','mean'],['Median','median'],['Minimum','min'],['Maximum','max'],['Range','range'],['Population std. dev.','sd']];
+$('t5c').innerHTML=`<p class="mu">${esc(c)} · quartiles use the inclusive method (Excel QUARTILE.INC). Fences are calculated once from all ${v.length} values and reused for the “without outliers” column.</p>
+<div class="cards"><div class="card">Q1<b>${fmt(f.q1)}</b></div><div class="card">Q3<b>${fmt(f.q3)}</b></div><div class="card">IQR<b>${fmt(f.iqr)}</b></div><div class="card">Lower fence<b>${fmt(f.lo)}</b></div><div class="card">Upper fence<b>${fmt(f.hi)}</b></div><div class="card">Outliers<b>${out.length}</b></div></div>
+<div class="grid2"><div><h3>Histogram (red = fences)</h3>${hist(v,f)}</div><div><h3>Box plot, same fences</h3>${box([{l:'With outliers',v},{l:'Without',v:w}],mn,mx,f)}</div></div>
+${cats.length?`<h3>Total ${esc(c)} by <select id="catS">${cats.map(k=>`<option ${k==catSel?'selected':''}>${esc(k)}</option>`).join('')}</select></h3>${bars(rows,catSel,c)}`:''}
+<h3>Comparison</h3><div class="tw"><table><tr><th>Statistic</th><th>With outliers</th><th>Without outliers</th><th>Difference</th></tr>${R.map(([l,k])=>`<tr><td>${l}</td><td class="n">${fmt(A[k])}</td><td class="n">${fmt(B[k])}</td><td class="n">${fmt(B[k]-A[k])}</td></tr>`).join('')}<tr><td>Mode</td><td>${modeTxt(A)}</td><td>${modeTxt(B)}</td><td></td></tr></table></div>
+<h3>Outlier records (${out.length})</h3><div class="tw" style="max-height:300px"><table><tr><th>Row</th><th>ID</th><th>${esc(c)}</th><th>Side</th>${ds.cols.includes('ApprovalStatus')?'<th>Status</th>':''}</tr>${out.map(r=>`<tr><td>${r.n}</td><td>${esc(r.d[idCol()])}</td><td class="n">${r.d[c]}</td><td>${+r.d[c]<f.lo?'low':'high'}</td>${ds.cols.includes('ApprovalStatus')?`<td>${esc(r.d.ApprovalStatus)}</td>`:''}</tr>`).join('')}</table></div>`;
+if($('catS'))$('catS').onchange=e=>{catSel=e.target.value;renderT5()}}
+/* ---------- T6 ---------- */
+function dl(name,text,noBom){const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([noBom?text:'\uFEFF'+text],{type:'text/csv'}));a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),999)}
+function renderT6(){if(!ds)return;const I=detect(),by={};I.forEach(i=>by[i.type]=(by[i.type]||0)+1);const base=ds.name.replace(/\.csv$/i,'');
+$('t6c').innerHTML=`<div class="cards"><div class="card">Original rows<b>${ds.orig.length}</b></div><div class="card">Cleaned rows<b>${ds.work.length}</b></div><div class="card">Logged changes<b>${ds.log.length}</b></div><div class="card">Unresolved issues<b>${I.length}</b></div></div>
+<p>${by['Conflicting ID']?`<b>Export blocked:</b> ${by['Conflicting ID']} rows share an ID but hold different data. Resolve them in T3.`:`<span class="ok">IDs are unique after removing any exact duplicates. Export will remove remaining exact duplicates automatically and log them.</span>`}</p>
+<p class="mu">Remaining missing/invalid values are exported as-is unless you fixed them; each is listed in T3. The original data stays untouched in memory and can be downloaded unchanged below.</p>
+<div class="row"><button class="p" id="x1">Download cleaned CSV</button><button id="x2">Download change log CSV</button><button id="x3">Download original (unchanged)</button></div>`;
+$('x1').onclick=()=>{if(detect().some(i=>i.type=='Conflicting ID'))return alert('Resolve conflicting IDs first (T3).');
+const seen=new Set(),keep=[],t=new Date().toISOString();ds.work.forEach(r=>{const k=ds.cols.map(c=>r.d[c].trim()).join('\u0001');if(seen.has(k))ds.log.push({n:r.n,id:r.d[idCol()],col:'(entire row)',o:'(row kept)',nv:'(row removed)',m:'Remove duplicate (export check)',why:'Exact duplicate; export requires unique records',t});else{seen.add(k);keep.push(r)}});
+ds.work=keep;dl(base+'_cleaned.csv',toCSV(ds.cols,keep.map(r=>ds.cols.map(c=>r.d[c]))));renderAll()};
+$('x2').onclick=()=>dl(base+'_change_log.csv',toCSV(['Timestamp','Row #','Record ID','Field','Original value','New value','Method','Reason'],ds.log.map(l=>[l.t,l.n,l.id,l.col,l.o,l.nv,l.m,l.why].map(String))));
+$('x3').onclick=()=>dl(base+'_original.csv',ds.raw,true)}
+function renderAll(){renderT1();renderT2();renderT3();renderT4();renderT5();renderT6()}
+</script></body></html>
