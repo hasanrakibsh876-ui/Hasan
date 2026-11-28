@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Data Detectives — Portfolio</title>
+<style>
+:root {
+  color-scheme: dark;
+  --bg: #111418;
+  --card: #1e232a;
+  --border: #343b45;
+  --text: #f2f4f7;
+  --muted: #a0a8b3;
+  --blue: #6d9cf5;
+  --blue-dark: #17243d;
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  padding: 24px 18px 48px;
+  background: var(--bg);
+  color: var(--text);
+  font-family: Arial, Helvetica, sans-serif;
+}
+.container { width: 100%; max-width: 1000px; margin: 0 auto; }
+h1 { margin: 0 0 10px; font-size: clamp(28px, 5vw, 40px); }
+h2 { margin: 0 0 14px; font-size: 27px; }
+p { line-height: 1.6; }
+.intro, .assignment {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 24px;
+  margin: 14px 0;
+}
+.intro { margin-bottom: 42px; }
+.intro p, .description { color: var(--muted); margin: 8px 0 18px; font-size: 18px; }
+.section-title { margin: 0 0 18px; }
+.assignment h3 { margin: 0 0 12px; font-size: 25px; line-height: 1.4; }
+.assignment .description { margin: 0 0 18px; }
+.actions { display: flex; flex-wrap: wrap; gap: 12px; }
+.btn {
+  display: inline-block;
+  padding: 16px 23px;
+  border-radius: 10px;
+  border: 2px solid var(--blue);
+  color: var(--blue);
+  text-decoration: none;
+  font-size: 17px;
+  line-height: 1.2;
+}
+.btn.primary { background: var(--blue); color: white; }
+.btn.disabled {
+  opacity: .48;
+  border-style: dashed;
+  pointer-events: none;
+}
+.btn:hover:not(.disabled) { filter: brightness(1.08); }
+@media (max-width: 600px) {
+  body { padding: 16px 12px 36px; }
+  .intro, .assignment { padding: 18px; }
+  .assignment h3 { font-size: 22px; }
+  .btn { padding: 13px 18px; font-size: 16px; }
+}
+</style>
+</head>
+<body>
+<main class="container">
+  <section class="intro">
+    <h1>Data Detectives Project</h1>
+    <h2>Google Drive folder</h2>
+    <p>One subfolder per assignment, with the report, original CSV, cleaned CSV, change log and Clue Documentation.</p>
+    <div class="actions">
+      <a class="btn primary" href="https://drive.google.com/drive/folders/1TwtNKlE4TlHPFCw34iDo83JSTqwzI5wv" target="_blank" rel="noopener">Open Drive folder</a>
+    </div>
+  </section>
+
+  <h2 class="section-title">Assignments &amp; tools</h2>
+
+  <section class="assignment">
+    <h3>Assignment 1 · Resource Allocation Records</h3>
+    <p class="description">Data quality workbench (T1–T6).</p>
+    <div class="actions">
+      <a class="btn primary" href="DD_Assignment1_T1_T2_CSV_Analysis_Tool_Fixed.html">Open tool</a>
+      <a class="btn" href="https://drive.google.com/drive/folders/1TwtNKlE4TlHPFCw34iDo83JSTqwzI5wv" target="_blank" rel="noopener">Drive files</a>
+    </div>
+  </section>
+
+  <section class="assignment">
+    <h3>Assignment 2</h3>
+    <p class="description">Coming soon.</p>
+    <div class="actions">
+      <span class="btn disabled" aria-disabled="true">Open tool</span>
+      <span class="btn disabled" aria-disabled="true">Drive files</span>
+    </div>
+  </section>
+
+  <section class="assignment">
+    <h3>Assignment 3</h3>
+    <p class="description">Cipher Analysis Tool — encrypt, decrypt, validate and compare communication messages using Vigenère, AES-256-GCM and Caesar ciphers.</p>
+    <div class="actions">
+      <a class="btn primary" href="Assignment3_Cipher_Analysis_Tool.html">Open tool</a>
+      <a class="btn" href="https://drive.google.com/drive/folders/1TwtNKlE4TlHPFCw34iDo83JSTqwzI5wv" target="_blank" rel="noopener">Drive files</a>
+    </div>
+  </section>
+</main>
+</body>
+</html>
